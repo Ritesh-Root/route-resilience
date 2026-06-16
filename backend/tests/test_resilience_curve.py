@@ -57,11 +57,16 @@ def test_removed_fraction_monotonic_in_unit_interval(input_mode: str, model: str
 
 
 @pytest.mark.parametrize("input_mode,model", COMBOS)
-def test_efficiency_starts_at_one_and_is_non_increasing_ish(input_mode: str, model: str):
+def test_efficiency_normalized_against_intact_base(input_mode: str, model: str):
     efficiency = _get_curve(input_mode, model)["efficiency"]
 
-    # The curve is normalized: the intact network is efficiency 1.0.
-    assert efficiency[0] == pytest.approx(1.0, abs=1e-6)
+    # The curve is normalized against the INTACT network's efficiency (BASE_EFF).
+    # So an intact view starts at 1.0, but the fragmented occluded+baseline view
+    # correctly starts BELOW 1.0 (it has already lost links before any removal).
+    if (input_mode, model) == ("occluded", "baseline"):
+        assert 0.0 < efficiency[0] < 1.0, efficiency
+    else:
+        assert efficiency[0] == pytest.approx(1.0, abs=1e-6)
     # Removing edges/nodes should never increase global efficiency (small slack
     # for float noise and any tie-breaking in the removal order).
     assert all(b <= a + 1e-6 for a, b in zip(efficiency, efficiency[1:])), efficiency

@@ -118,9 +118,40 @@ def _fragment(G: nx.Graph, drop_fraction: float = 0.30, seed: int = 13) -> nx.Gr
 
 
 # --------------------------------------------------------------------------- #
+# Real-network override: if a GeoJSON file exists (produced by the OSM fetcher
+# `scripts/fetch_bengaluru_osm.py` or by trained-model inference via
+# `ml/integration/segmenter_hook.py`), serve THAT as the base network instead of
+# the synthetic grid. Everything downstream (criticality, gatekeepers, simulate)
+# is identical. Set REAL_NETWORK_PATH to override the default location.
+# --------------------------------------------------------------------------- #
+import json
+import os
+
+from . import graph_build
+
+_DEFAULT_REAL_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "real_network.geojson")
+
+
+def _load_base() -> tuple[nx.Graph, str]:
+    """Return ``(base_graph, source)`` where source is 'real' or 'synthetic'."""
+    path = os.environ.get("REAL_NETWORK_PATH", _DEFAULT_REAL_PATH)
+    if os.path.isfile(path):
+        try:
+            with open(path) as fh:
+                fc = json.load(fh)
+            G = graph_build.geojson_to_graph(fc)
+            if G.number_of_edges() > 0:
+                _annotate(G)
+                return G, "real"
+        except Exception as exc:  # never let a bad file break the demo
+            print(f"[network_factory] failed to load real network {path!r}: {exc}; using synthetic")
+    return build_base_network(), "synthetic"
+
+
+# --------------------------------------------------------------------------- #
 # Cache + public accessors
 # --------------------------------------------------------------------------- #
-_BASE = build_base_network()
+_BASE, NETWORK_SOURCE = _load_base()
 BASE_EFF = crit.global_efficiency_weighted(_BASE)
 _CACHE: dict[tuple[str, str], nx.Graph] = {}
 

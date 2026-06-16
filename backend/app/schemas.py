@@ -1,12 +1,15 @@
 """Pydantic response/request models (mirrors the front-end data contract)."""
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 InputMode = Literal["clean", "occluded"]
 ModelKind = Literal["baseline", "robust"]
+
+# Bounded id string (prevents oversized/abusive simulate payloads).
+EdgeOrNodeId = Annotated[str, StringConstraints(max_length=64)]
 
 
 class Metrics(BaseModel):
@@ -34,11 +37,11 @@ class ResilienceCurve(BaseModel):
 
 
 class SimulationRequest(BaseModel):
-    city: str = "Bengaluru"
+    city: Annotated[str, StringConstraints(max_length=64)] = "Bengaluru"
     model: ModelKind = "robust"
     input: InputMode = "clean"
-    disabledEdgeIds: list[str] = Field(default_factory=list)
-    disabledNodeIds: list[str] = Field(default_factory=list)
+    disabledEdgeIds: list[EdgeOrNodeId] = Field(default_factory=list, max_length=500)
+    disabledNodeIds: list[EdgeOrNodeId] = Field(default_factory=list, max_length=500)
 
 
 class SimulationResult(BaseModel):

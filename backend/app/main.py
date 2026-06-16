@@ -36,7 +36,9 @@ _METRIC_TABLE = {
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "service": "route-resilience", "baseEfficiency": round(network_factory.BASE_EFF, 6)}
+    return {"status": "ok", "service": "route-resilience",
+            "networkSource": network_factory.NETWORK_SOURCE,
+            "baseEfficiency": round(network_factory.BASE_EFF, 6)}
 
 
 @app.get("/api/cities")
@@ -52,6 +54,7 @@ def network(city: str = "Bengaluru",
     G = network_factory.get_network(input, model)
     fc = graph_build.graph_to_geojson(G)
     fc["meta"] = {"city": city, "input": input, "model": model,
+                  "source": network_factory.NETWORK_SOURCE,
                   "edges": G.number_of_edges(), "nodes": G.number_of_nodes()}
     return fc
 
@@ -60,7 +63,7 @@ def network(city: str = "Bengaluru",
 def gatekeepers(city: str = "Bengaluru",
                 input: InputMode = Query("clean"),
                 model: ModelKind = Query("robust"),
-                top_k: int = 8):
+                top_k: int = Query(8, ge=1, le=100)):
     G = network_factory.get_network(input, model)
     return graph_build.gatekeeper_nodes(G, top_k=top_k)
 
@@ -80,7 +83,7 @@ def resilience_curve(city: str = "Bengaluru",
                      input: InputMode = Query("clean"),
                      model: ModelKind = Query("robust")):
     G = network_factory.get_network(input, model)
-    return crit.resilience_curve(G)
+    return crit.resilience_curve(G, base_eff=network_factory.BASE_EFF)
 
 
 @app.post("/api/simulate", response_model=SimulationResult)

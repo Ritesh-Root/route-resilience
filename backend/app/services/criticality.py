@@ -76,16 +76,31 @@ def resilience_index(G: nx.Graph, base_eff: float) -> int:
 # --------------------------------------------------------------------------- #
 # Resilience curve (sequential attack)
 # --------------------------------------------------------------------------- #
-def resilience_curve(G: nx.Graph, steps: int = 10, max_fraction: float = 0.5) -> dict:
-    """Remove edges in descending-betweenness order; track network decay."""
+def resilience_curve(G: nx.Graph, base_eff: float | None = None,
+                     steps: int = 10, max_fraction: float = 0.5) -> dict:
+    """Remove edges in descending-betweenness order; track network decay.
+
+    ``base_eff`` is the reference (intact-network) efficiency the curve is
+    normalized against. Pass the intact ``BASE_EFF`` so a *fragmented* input
+    correctly starts below 1.0 instead of falsely renormalizing to 1.0. If
+    omitted, falls back to this graph's own efficiency (legacy behavior).
+    """
     H = G.copy()
-    base_eff = global_efficiency_weighted(H)
+    m = H.number_of_edges()
+    if m == 0:
+        return {"removedFraction": [0.0], "efficiency": [0.0],
+                "giantComponent": [giant_component_fraction(H)]}
+    if base_eff is None or base_eff <= 0:
+        base_eff = global_efficiency_weighted(H)
+
+    def _ratio() -> float:
+        return round((global_efficiency_weighted(H) / base_eff) if base_eff > 0 else 0.0, 3)
+
     ranked = [e for e, _ in sorted(
         edge_betweenness(H).items(), key=lambda kv: kv[1], reverse=True)]
-    m = H.number_of_edges()
     per_step = max(1, int((m * max_fraction) / steps))
 
-    removed_fraction, efficiency, giant = [0.0], [1.0], [giant_component_fraction(H)]
+    removed_fraction, efficiency, giant = [0.0], [_ratio()], [giant_component_fraction(H)]
     removed = 0
     for s in range(steps):
         for e in ranked[removed: removed + per_step]:

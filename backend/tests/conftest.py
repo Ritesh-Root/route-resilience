@@ -2,11 +2,17 @@
 
 Run from the backend/ directory:  cd backend && python -m pytest
 """
+import os
 import sys
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+
+# Pin the network source to the SYNTHETIC grid for deterministic tests, even when
+# a real_network.geojson (OSM / trained-model output) is committed for the demo.
+# Must be set before `app.main` (-> network_factory) is imported below.
+os.environ["REAL_NETWORK_PATH"] = "/nonexistent/__force_synthetic__.geojson"
 
 # Add the backend/ root (parent of this tests/ dir) to sys.path so that
 # `import app.main` resolves regardless of the pytest invocation directory.
