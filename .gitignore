@@ -1,0 +1,46 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# ---- Node / frontend ----
+node_modules/
+dist/
+dist-ssr/
+.output/
+.vinxi/
+.nitro/
+.tanstack/
+*.local
+
+# ---- Env files (keep examples) ----
+.env
+.env.*
+!.env.example
+
+# ---- ML artifacts (large; train on a GPU box, don't commit) ----
+*.pth
+*.pt
+*.ckpt
+checkpoints/
+data/raw/
+data/processed/
+*.tif
+*.tiff
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Fleet tooling (internal orchestration: logs, quarantine, workflow script) ----
+.fleet/
+
+# ---- OS / editor ----
+.DS_Store
+.vscode/
+.idea/
+*.swp

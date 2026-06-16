@@ -1,0 +1,111 @@
+# ============================================================================
+# requirements-ml.txt — Occlusion-Robust Road Extraction (ML training side)
+# ============================================================================
+# Install ONLY on the training/experiment machine, NOT in the FastAPI image.
+# The backend (backend/app/services/occlusion.py) is deliberately numpy-only so
+# the API container stays lean; this file pins the heavy CV/geo/graph stack used
+# to TRAIN the segmentation model and build the road graph offline.
+#
+# Target machine (HARD CONSTRAINTS): Python 3.14, 4GB RTX 3050 laptop GPU.
+#   - 4GB VRAM is tight: train at <=512px chips, batch_size 2-4, fp16/AMP,
+#     and a light encoder (e.g. resnet34 / mobilenet). Do NOT load full tiles.
+#   - Use CUDA 12.x wheels; verify the driver supports the chosen cu12x build.
+#
+# ----------------------------------------------------------------------------
+# PYTHON 3.14 CAVEATS (read before installing)
+# ----------------------------------------------------------------------------
+# Python 3.14 is very new (final released late 2025). Several of these projects
+# may NOT yet ship cp314 manylinux wheels. If pip tries to build from source and
+# fails, the pragmatic fix for a hackathon is a dedicated env on Python 3.11/3.12
+# (best wheel coverage today), e.g.:
+#     conda create -n atlas-ml python=3.12 && conda activate atlas-ml
+# Keep the *pins below* identical in that env. Notes per package inline.
+#
+# GDAL / GEOS / PROJ are C libraries. rasterio + shapely (+ osmnx's geo deps)
+# need them. STRONGLY prefer conda-forge which bundles the binaries:
+#     conda install -c conda-forge gdal rasterio shapely osmnx
+# If you must use pip, install system libs first (Fedora):
+#     sudo dnf install gdal gdal-devel geos geos-devel proj proj-devel
+# and ensure `gdal-config --version` matches the rasterio GDAL pin.
+# ----------------------------------------------------------------------------
+
+# --- Deep learning (install torch/torchvision FROM the CUDA index, see below) ---
+# TODO(run): install the GPU build explicitly, do NOT let the lines below pull
+#   the CPU-only wheel:
+#     pip install torch==2.5.1 torchvision==0.20.1 \
+#         --index-url https://download.pytorch.org/whl/cu124
+# CAVEAT(py3.14): torch wheels historically lag new CPython minors; 2.5.x may
+#   lack cp314 wheels -> use the py3.12 env. Newer torch (2.6+) may add cp314.
+torch==2.5.1                  # cu124 build; 4GB VRAM -> use AMP + small batches
+torchvision==0.20.1           # version MUST match torch (2.5.1 <-> 0.20.1)
+
+# --- Segmentation models + augmentation ---
+segmentation-models-pytorch==0.3.4   # U-Net/DeepLab heads + pretrained encoders
+albumentations==1.4.18        # plug random_occlude() from occlusion.py as a
+                              # custom A.Lambda transform (clouds/shadows/canopy)
+opencv-python==4.10.0.84      # albumentations backend; pulls numpy. CAVEAT: a
+                              # cp314 wheel may be missing -> opencv-python-headless
+                              # is a lighter alternative if no GUI is needed.
+scikit-image==0.24.0          # mask post-processing, skeletonize -> graph nodes
+
+# --- Geospatial (need system/conda GDAL+GEOS+PROJ; see header) ---
+rasterio==1.3.11              # read GeoTIFF chips. NEEDS GDAL; prefer conda-forge.
+                              # If pip-building, pin must match `gdal-config --version`.
+shapely==2.0.6                # vector geometry for predicted road lines. NEEDS GEOS.
+osmnx==1.9.4                  # OSM road graph (Bengaluru) -> networkx. Pulls
+                              # geopandas/fiona/pyproj -> all want GDAL/GEOS/PROJ;
+                              # conda-forge install strongly recommended.
+
+# --- Graph analysis (pure Python, no system deps) ---
+networkx==3.4.2               # betweenness / articulation points / criticality
+                              # (mirrors backend gatekeeper + resilience logic)
+
+# --- Core / utilities ---
+numpy==2.1.3                  # shared with backend occlusion.py (numpy-only there)
+tqdm==4.67.1                  # training/eval progress bars
+
+# ============================================================================
+# QUICK START (TODO)
+# ============================================================================
+#   1) conda create -n atlas-ml python=3.12 && conda activate atlas-ml
+#   2) conda install -c conda-forge gdal geos proj rasterio shapely osmnx
+#   3) pip install torch==2.5.1 torchvision==0.20.1 \
+#        --index-url https://download.pytorch.org/whl/cu124
+#   4) pip install -r requirements-ml.txt   # geo libs already satisfied by conda
+#   5) DO NOT download DeepGlobe/SpaceNet here (multi-GB). Point the loader at a
+#      small local sample of chips instead.
+#
+# IMPORT-SANITY CHECK (no install, no download, no training). This is a pip
+# requirements file (NOT a Python module), so the snippet below is kept inside
+# comments. Copy it into ml/check_env.py and run `python ml/check_env.py` to
+# verify the stack imports — every heavy import is guarded so it works even
+# when nothing is installed yet:
+#
+#   from __future__ import annotations
+#   import importlib, sys
+#   _PKGS = [
+#       ("torch","torch"), ("torchvision","torchvision"),
+#       ("segmentation_models_pytorch","segmentation-models-pytorch"),
+#       ("albumentations","albumentations"), ("cv2","opencv-python"),
+#       ("skimage","scikit-image"), ("rasterio","rasterio"),
+#       ("shapely","shapely"), ("networkx","networkx"), ("osmnx","osmnx"),
+#       ("numpy","numpy"), ("tqdm","tqdm"),
+#   ]
+#   def main() -> None:
+#       if sys.version_info[:2] >= (3, 14):
+#           print("[warn] py3.14: some pins may lack cp314 wheels; use a py3.12 env")
+#       for mod, label in _PKGS:
+#           try:
+#               m = importlib.import_module(mod)  # cv2/rasterio may fail on missing C libs
+#               print(f"  {label:32s} {getattr(m,'__version__','unknown')}")
+#           except Exception as exc:
+#               print(f"  {label:32s} MISSING ({type(exc).__name__}: {exc})")
+#       try:
+#           import torch
+#           ok = torch.cuda.is_available()
+#           print("GPU:", torch.cuda.get_device_name(0) if ok else "CPU-only (install cu124)")
+#       except Exception as exc:
+#           print("GPU: torch unavailable", exc)
+#   if __name__ == "__main__":
+#       main()
+# ============================================================================

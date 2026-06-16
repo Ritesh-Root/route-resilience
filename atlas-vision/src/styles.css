@@ -1,0 +1,178 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+@import "leaflet/dist/leaflet.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 8px);
+  --radius-2xl: calc(var(--radius) + 16px);
+  --radius-3xl: calc(var(--radius) + 24px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-cream: var(--cream);
+  --color-card-hairline: var(--card-hairline);
+  --color-coral: var(--coral);
+  --color-coral-soft: var(--coral-soft);
+  --color-mint: var(--mint);
+  --color-mint-soft: var(--mint-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-ink: var(--ink);
+  --color-sand: var(--sand);
+
+  --color-crit-low: var(--crit-low);
+  --color-crit-mid: var(--crit-mid);
+  --color-crit-high: var(--crit-high);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --shadow-card: 0 10px 30px -12px rgba(122, 111, 101, 0.18), 0 2px 6px -2px rgba(122, 111, 101, 0.06);
+  --shadow-soft: 0 6px 20px -8px rgba(122, 111, 101, 0.18);
+}
+
+:root {
+  --radius: 0.75rem;
+
+  --cream: #F7F4EE;
+  --background: #F7F4EE;
+  --foreground: #1F1B16;
+  --ink: #1F1B16;
+  --sand: #FAF7F2;
+
+  --card: #FFFFFF;
+  --card-foreground: #1F1B16;
+  --card-hairline: #EBE3D5;
+
+  --popover: #FFFFFF;
+  --popover-foreground: #1F1B16;
+
+  --primary: #FF7A4E;
+  --primary-foreground: #FFFFFF;
+  --secondary: #FAF7F2;
+  --secondary-foreground: #1F1B16;
+  --muted: #FAF7F2;
+  --muted-foreground: #7A6F65;
+  --accent: #FFEAE5;
+  --accent-foreground: #1F1B16;
+  --destructive: #E24B4A;
+  --destructive-foreground: #FFFFFF;
+  --border: #EBE3D5;
+  --input: #EBE3D5;
+  --ring: #FF7A4E;
+
+  --coral: #FF7A4E;
+  --coral-soft: #FFEAE5;
+  --mint: #2D8C7D;
+  --mint-soft: #E8F3F1;
+  --amber: #B28228;
+  --amber-soft: #FFF4E5;
+
+  /* Warm criticality ramp: mint → marigold → coral */
+  --crit-low: #A7D7C5;
+  --crit-mid: #FFD97D;
+  --crit-high: #FF7A4E;
+
+  --chart-1: #FF7A4E;
+  --chart-2: #2D8C7D;
+  --chart-3: #FFD97D;
+  --chart-4: #6B8FB5;
+  --chart-5: #B28228;
+}
+
+@layer base {
+  * { border-color: var(--card-hairline); }
+  html, body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; }
+}
+
+/* Leaflet dark interior on warm theme */
+.leaflet-container {
+  background: #1A1C1E !important;
+  font-family: inherit;
+  outline: none;
+}
+.leaflet-control-attribution {
+  background: rgba(26, 28, 30, 0.75) !important;
+  color: #C9C1B5 !important;
+  font-size: 10px !important;
+  border: none !important;
+}
+.leaflet-control-attribution a { color: #FFB084 !important; }
+.leaflet-control-zoom a {
+  background: #ffffff !important;
+  color: #1F1B16 !important;
+  border-color: #EBE3D5 !important;
+  border-radius: 8px !important;
+}
+.leaflet-control-zoom a:hover { background: #FAF7F2 !important; color: #FF7A4E !important; }
+.leaflet-bar {
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+}
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: #FFFFFF !important;
+  color: #1F1B16 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 30px rgba(31, 27, 22, 0.18) !important;
+}
+.leaflet-popup-content { margin: 14px !important; font-family: inherit !important; }
+
+/* Pulsing gatekeeper marker (coral) */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(255, 122, 78, 0.6); }
+  70% { box-shadow: 0 0 0 14px rgba(255, 122, 78, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 122, 78, 0); }
+}
+.gatekeeper-marker {
+  width: 14px; height: 14px; border-radius: 9999px;
+  background: #FF7A4E; border: 2px solid #fff;
+  animation: pulse-ring 1.8s infinite;
+}
+.gatekeeper-marker.dim { opacity: 0.3; animation: none; filter: grayscale(0.6); background: #B0A99E; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #EBE3D5; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #D6CCB8; }
+
+/* Range input accent */
+input[type="range"] { accent-color: #FF7A4E; }
