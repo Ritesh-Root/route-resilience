@@ -533,34 +533,44 @@ def _run_epoch(
             image = image.to(device, non_blocking=True)
             mask = mask.to(device, non_blocking=True)
 
+            # Only the conv forward runs under autocast (fp16). Losses are
+            # computed in fp32: the soft-Dice term sums sigmoid probabilities
+            # over a 512x512 tile (~262k pixels), which overflows fp16's ~65504
+            # max to inf -> inf/inf = NaN on step 1. Casting logits to float
+            # before the loss keeps the reductions numerically safe.
             with autocast_ctx:
                 logits_clean = model(image)
-                if occluded is not None:
-                    logits_occ = model(occluded)
-                    if cfg.consistency_loss:
-                        loss, parts = criterion(
-                            logits_clean, logits_occ, mask
-                        )
-                        # Apply the (possibly warmed-up) consistency weight here so
-                        # the schedule is honored even though the criterion bundles
-                        # its own default weight.
-                        loss = parts["sup_clean"] * 0.5 + parts["sup_occluded"] * 0.5
-                        cons = parts["consistency"]
-                        loss = loss + cw * cons
-                        sup_val = float(parts["sup_clean"] + parts["sup_occluded"]) * 0.5
-                        cons_val = float(cons)
-                    else:
-                        # Occlusion augmentation without an explicit consistency
-                        # term: supervise both views against the clean mask.
-                        sup_clean = losses_mod.bce_dice_loss(logits_clean, mask)
-                        sup_occ = losses_mod.bce_dice_loss(logits_occ, mask)
-                        loss = 0.5 * (sup_clean + sup_occ)
-                        sup_val = float(loss)
-                        cons_val = 0.0
+                logits_occ = model(occluded) if occluded is not None else None
+
+            logits_clean = logits_clean.float()
+            if logits_occ is not None:
+                logits_occ = logits_occ.float()
+
+            if occluded is not None:
+                if cfg.consistency_loss:
+                    loss, parts = criterion(
+                        logits_clean, logits_occ, mask
+                    )
+                    # Apply the (possibly warmed-up) consistency weight here so
+                    # the schedule is honored even though the criterion bundles
+                    # its own default weight.
+                    loss = parts["sup_clean"] * 0.5 + parts["sup_occluded"] * 0.5
+                    cons = parts["consistency"]
+                    loss = loss + cw * cons
+                    sup_val = float(parts["sup_clean"] + parts["sup_occluded"]) * 0.5
+                    cons_val = float(cons)
                 else:
-                    loss = losses_mod.bce_dice_loss(logits_clean, mask)
+                    # Occlusion augmentation without an explicit consistency
+                    # term: supervise both views against the clean mask.
+                    sup_clean = losses_mod.bce_dice_loss(logits_clean, mask)
+                    sup_occ = losses_mod.bce_dice_loss(logits_occ, mask)
+                    loss = 0.5 * (sup_clean + sup_occ)
                     sup_val = float(loss)
                     cons_val = 0.0
+            else:
+                loss = losses_mod.bce_dice_loss(logits_clean, mask)
+                sup_val = float(loss)
+                cons_val = 0.0
 
             if train and optimizer is not None:
                 # Scale by 1/accum so summed micro-batch grads average correctly.
