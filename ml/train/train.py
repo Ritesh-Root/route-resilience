@@ -76,10 +76,15 @@ if TYPE_CHECKING:  # pragma: no cover
     from torch import Tensor
     from torch.utils.data import Dataset as _TorchDataset
 else:
-    # Runtime stand-in so the Dataset subclass below is definable without torch.
-    # The real torch base is mixed in lazily on first construction (see
-    # ChipDataset.__init__), matching ml/data/deepglobe.py's approach.
-    _TorchDataset = object
+    # Resolve the real torch Dataset base at import time when torch is present,
+    # falling back to ``object`` only if torch is genuinely absent (so the module
+    # stays importable for tooling without torch). We deliberately do NOT rebind
+    # ``cls.__bases__`` later: that hack raises ``TypeError: __bases__ assignment:
+    # 'Dataset' deallocator differs from 'object'`` on modern CPython/torch.
+    try:
+        from torch.utils.data import Dataset as _TorchDataset
+    except Exception:  # torch not installed (lint/type tooling only)
+        _TorchDataset = object
 
 
 # 4GB-RTX-3050-friendly defaults. Keep these conservative — they are the happy
@@ -251,16 +256,6 @@ class ChipDataset(_TorchDataset):  # type: ignore[misc, valid-type]
         return_occluded: bool = False,
         seed: int = 1337,
     ) -> None:
-        # Re-parent onto the real torch Dataset lazily so DataLoader treats us
-        # correctly, but the class is still definable without torch at import.
-        try:
-            base = _torch_dataset_base()
-            cls = type(self)
-            if base is not object and base not in cls.__bases__:
-                cls.__bases__ = (base,)
-        except ImportError:
-            pass
-
         if split not in ("train", "val", "test"):
             raise ValueError(f"split must be train/val/test, got {split!r}")
 
@@ -357,13 +352,6 @@ class _RandomChipDataset(_TorchDataset):  # type: ignore[misc, valid-type]
     """
 
     def __init__(self, n: int, tile: int, return_occluded: bool, seed: int = 0) -> None:
-        try:
-            base = _torch_dataset_base()
-            cls = type(self)
-            if base is not object and base not in cls.__bases__:
-                cls.__bases__ = (base,)
-        except ImportError:
-            pass
         self.n = n
         self.tile = tile
         self.return_occluded = return_occluded
