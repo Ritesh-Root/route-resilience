@@ -654,9 +654,9 @@ function RouteResiliencePage() {
                   <span className="font-bold text-foreground">
                     {metrics.data?.resilienceIndex.toFixed(1) ?? "—"}
                   </span>{" "}
-                  · APLS{" "}
+                  · Occlusion recall{" "}
                   <span className="font-bold text-foreground">
-                    {metrics.data?.apls.toFixed(2) ?? "—"}
+                    {metrics.data ? (metrics.data.occlusionRecall * 100).toFixed(1) + "%" : "—"}
                   </span>
                   .
                 </p>

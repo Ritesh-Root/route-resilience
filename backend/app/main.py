@@ -24,13 +24,17 @@ app = FastAPI(title="Route Resilience API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-# Segmentation-quality metrics by view. resilienceIndex is computed live from the
-# actual graph so it always reflects the network you're looking at.
+# Real segmentation-quality metrics measured on the DeepGlobe val split by the
+# trained D-LinkNet models (Kaggle run, 12 epochs each; see ml/notebooks).
+# occlusionRecall stores the per-view Recall. resilienceIndex is computed live
+# from the actual graph so it always reflects the network you're looking at.
+# NOTE: connectivityRatio/APLS are intentionally NOT shown — they require the
+# mask->graph extraction step (georeferenced tile), which has not been run.
 _METRIC_TABLE = {
-    ("clean", "robust"):    dict(iou=0.89, dice=0.93, occlusionRecall=0.92, connectivityRatio=0.98, apls=0.87),
-    ("clean", "baseline"):  dict(iou=0.86, dice=0.90, occlusionRecall=0.78, connectivityRatio=0.90, apls=0.81),
-    ("occluded", "robust"): dict(iou=0.85, dice=0.90, occlusionRecall=0.89, connectivityRatio=0.96, apls=0.84),
-    ("occluded", "baseline"): dict(iou=0.71, dice=0.77, occlusionRecall=0.58, connectivityRatio=0.64, apls=0.61),
+    ("clean", "robust"):      dict(iou=0.526, dice=0.689, occlusionRecall=0.665),
+    ("clean", "baseline"):    dict(iou=0.528, dice=0.691, occlusionRecall=0.671),
+    ("occluded", "robust"):   dict(iou=0.511, dice=0.676, occlusionRecall=0.648),
+    ("occluded", "baseline"): dict(iou=0.439, dice=0.610, occlusionRecall=0.528),
 }
 
 

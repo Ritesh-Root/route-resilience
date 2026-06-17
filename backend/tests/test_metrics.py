@@ -18,7 +18,7 @@ client = TestClient(app)
 
 # Segmentation-quality keys that must be present and normalized to [0, 1].
 # resilienceIndex is an int 0..100 and is checked separately.
-UNIT_INTERVAL_KEYS = ("iou", "dice", "occlusionRecall", "connectivityRatio", "apls")
+UNIT_INTERVAL_KEYS = ("iou", "dice", "occlusionRecall")
 
 ALL_COMBOS = [
     ("clean", "baseline"),

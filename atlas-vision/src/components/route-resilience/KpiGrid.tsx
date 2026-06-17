@@ -123,16 +123,6 @@ export function KpiGrid({ metrics }: { metrics?: Metrics | null }) {
           tone="mint"
         />
         <Kpi
-          label="Connectivity"
-          value={fmtRatio(metrics.connectivityRatio)}
-          hint="Graph cohesion"
-        />
-        <Kpi
-          label="APLS"
-          value={fmtRatio(metrics.apls)}
-          hint="Topological accuracy"
-        />
-        <Kpi
           label="Status"
           value={!hasRi ? MISSING : ri >= 70 ? "Stable" : "Stressed"}
           hint="Live system"

@@ -40,8 +40,6 @@ export interface Metrics {
   iou: number;
   dice: number;
   occlusionRecall: number;
-  connectivityRatio: number;
-  apls: number;
   resilienceIndex: number; // 0..100
 }
 

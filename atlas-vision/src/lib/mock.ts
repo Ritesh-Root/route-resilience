@@ -174,21 +174,20 @@ export const METRICS: Record<
   "clean-baseline" | "clean-robust" | "occluded-baseline" | "occluded-robust",
   Metrics
 > = {
+  // Real DeepGlobe val metrics from the trained D-LinkNet models (Kaggle run).
+  // resilienceIndex mirrors the live backend story (intact 100; occluded
+  // baseline fragments to ~79).
   "clean-baseline": {
-    iou: 0.81, dice: 0.89, occlusionRecall: 0.74,
-    connectivityRatio: 0.93, apls: 0.78, resilienceIndex: 78,
+    iou: 0.528, dice: 0.691, occlusionRecall: 0.671, resilienceIndex: 100,
   },
   "clean-robust": {
-    iou: 0.86, dice: 0.92, occlusionRecall: 0.91,
-    connectivityRatio: 0.97, apls: 0.86, resilienceIndex: 88,
+    iou: 0.526, dice: 0.689, occlusionRecall: 0.665, resilienceIndex: 100,
   },
   "occluded-baseline": {
-    iou: 0.58, dice: 0.68, occlusionRecall: 0.41,
-    connectivityRatio: 0.62, apls: 0.49, resilienceIndex: 44,
+    iou: 0.439, dice: 0.610, occlusionRecall: 0.528, resilienceIndex: 79,
   },
   "occluded-robust": {
-    iou: 0.83, dice: 0.90, occlusionRecall: 0.86,
-    connectivityRatio: 0.95, apls: 0.83, resilienceIndex: 84,
+    iou: 0.511, dice: 0.676, occlusionRecall: 0.648, resilienceIndex: 100,
   },
 };
 

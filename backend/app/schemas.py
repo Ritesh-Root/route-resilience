@@ -16,8 +16,6 @@ class Metrics(BaseModel):
     iou: float
     dice: float
     occlusionRecall: float
-    connectivityRatio: float
-    apls: float
     resilienceIndex: int
 
 
