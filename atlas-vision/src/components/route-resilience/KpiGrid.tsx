@@ -1,6 +1,5 @@
 import { resilienceColor } from "@/lib/criticality";
 import type { Metrics } from "@/lib/types";
-import { TrendingUp } from "lucide-react";
 
 function Kpi({
   label,
@@ -80,11 +79,6 @@ export function KpiGrid({ metrics }: { metrics?: Metrics | null }) {
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Resilience index
             </p>
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-bold text-coral"
-            >
-              <TrendingUp className="h-3 w-3" /> +{Math.max(0, ri - 44)} vs baseline
-            </span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
             <span className="text-5xl font-extrabold tabular-nums" style={{ color }}>

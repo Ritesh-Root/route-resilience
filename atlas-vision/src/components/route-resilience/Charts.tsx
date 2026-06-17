@@ -52,12 +52,15 @@ function toCurveRows(data: ResilienceCurveData): CurveRow[] {
     efficiency.length,
     giantComponent.length,
   );
+  // Defensive clamp: inputs are expected in 0..1, but a stray >1 (or <0) value
+  // must not render past 100% (or below 0%).
+  const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
   const rows: CurveRow[] = [];
   for (let i = 0; i < n; i++) {
     rows.push({
-      removed: +(removedFraction[i] * 100).toFixed(1),
-      efficiency: +(efficiency[i] * 100).toFixed(1),
-      giant: +(giantComponent[i] * 100).toFixed(1),
+      removed: +(clamp01(removedFraction[i]) * 100).toFixed(1),
+      efficiency: +(clamp01(efficiency[i]) * 100).toFixed(1),
+      giant: +(clamp01(giantComponent[i]) * 100).toFixed(1),
     });
   }
   return rows;

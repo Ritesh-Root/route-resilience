@@ -36,6 +36,10 @@ export function WhatIfCard({
   // Total nodes are simulated too; surface a count so the summary subtitle is honest.
   const disabledNodeCount = result?.disabledNodeIds?.length ?? 0;
 
+  // Suppress numeric tiles when the last simulate call failed so we never show
+  // stale figures next to an error banner.
+  const showStats = !error;
+
   // Resilience after the disable set. Until a simulation resolves we show the
   // baseline RI so the tile is never blank.
   const ri = result?.resilienceIndexAfter ?? metrics.resilienceIndex;
@@ -64,12 +68,14 @@ export function WhatIfCard({
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             RI after
           </p>
-          <p className="mt-0.5 text-lg font-bold tabular-nums">{ri}</p>
+          <p className="mt-0.5 text-lg font-bold tabular-nums">
+            {showStats ? ri : "—"}
+          </p>
           <p
             className="text-[11px] font-bold tabular-nums"
-            style={{ color: delta < 0 ? "#FF7A4E" : "#7A6F65" }}
+            style={{ color: showStats && delta < 0 ? "#FF7A4E" : "#7A6F65" }}
           >
-            {delta === 0 ? "—" : (delta > 0 ? "+" : "") + delta}
+            {!showStats ? "—" : delta === 0 ? "—" : (delta > 0 ? "+" : "") + delta}
           </p>
         </div>
         <div className="rounded-2xl border border-card-hairline bg-sand p-3">
@@ -77,7 +83,7 @@ export function WhatIfCard({
             Travel time
           </p>
           <p className="mt-0.5 text-lg font-bold tabular-nums text-coral">
-            +{result?.avgTravelTimeIncreasePct ?? 0}%
+            {showStats ? `+${result?.avgTravelTimeIncreasePct ?? 0}%` : "—"}
           </p>
           <p className="text-[11px] text-muted-foreground">city average</p>
         </div>
@@ -86,7 +92,7 @@ export function WhatIfCard({
             Cut-off zones
           </p>
           <p className="mt-0.5 text-lg font-bold tabular-nums">
-            {result?.newlyDisconnectedZones ?? 0}
+            {showStats ? (result?.newlyDisconnectedZones ?? 0) : "—"}
           </p>
           <p className="text-[11px] text-muted-foreground">newly isolated</p>
         </div>

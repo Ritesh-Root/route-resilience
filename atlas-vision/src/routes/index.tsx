@@ -105,6 +105,8 @@ function RouteResiliencePage() {
   const [model, setModel] = useState<ModelMode>("robust");
   const [disabledIds, setDisabledIds] = useState<string[]>([]);
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
+  const [simLoading, setSimLoading] = useState(false);
+  const [simError, setSimError] = useState<string | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
   const [view, setView] = useState<"map" | "health" | "reports">("map");
 
@@ -156,12 +158,26 @@ function RouteResiliencePage() {
   useEffect(() => {
     if (disabledIds.length === 0) {
       setSimResult(null);
+      setSimError(null);
+      setSimLoading(false);
       return;
     }
     let cancelled = false;
-    simulateDisable({ city, stage, input, model }, disabledIds).then((r) => {
-      if (!cancelled) setSimResult(r);
-    });
+    setSimLoading(true);
+    setSimError(null);
+    simulateDisable({ city, stage, input, model }, disabledIds)
+      .then((r) => {
+        if (!cancelled) {
+          setSimResult(r);
+          setSimLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSimError("Couldn’t simulate this disable set. Showing last values.");
+          setSimLoading(false);
+        }
+      });
     return () => {
       cancelled = true;
     };
@@ -170,6 +186,8 @@ function RouteResiliencePage() {
   useEffect(() => {
     setDisabledIds([]);
     setSimResult(null);
+    setSimError(null);
+    setSimLoading(false);
   }, [input, model, city]);
 
   const recoveredCount = useMemo(() => {
@@ -568,6 +586,8 @@ function RouteResiliencePage() {
                   metrics={metrics.data}
                   disabledIds={disabledIds}
                   result={simResult}
+                  loading={simLoading}
+                  error={simError}
                   onToggle={(id) =>
                     setDisabledIds((d) =>
                       d.includes(id) ? d.filter((x) => x !== id) : [...d, id],
@@ -606,6 +626,8 @@ function RouteResiliencePage() {
                   metrics={metrics.data}
                   disabledIds={disabledIds}
                   result={simResult}
+                  loading={simLoading}
+                  error={simError}
                   onToggle={(id) =>
                     setDisabledIds((d) =>
                       d.includes(id) ? d.filter((x) => x !== id) : [...d, id],
